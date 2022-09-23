@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"log"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/VTRyo/go_todo_app_handson/config"
+	"golang.org/x/sync/errgroup"
 )
 
 //func main() {
@@ -24,23 +26,25 @@ import (
 //}
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Printf("need port number\n")
-		os.Exit(1)
-	}
-	p := os.Args[1]
-
-	l, err := net.Listen("tcp", ":"+p)
-	if err != nil {
-		log.Fatalf("failed to listen to port %s: %v", p, err)
-	}
-	if err := run(context.Background(), l); err != nil {
+	if err := run(context.Background()); err != nil {
 		log.Printf("failed to terminate server: %v", err)
 		os.Exit(1)
 	}
 }
 
-func run(ctx context.Context, l net.Listener) error {
+func run(ctx context.Context) error {
+	// configパッケージを使って起動する
+	cfg, err := config.New()
+	if err != nil {
+		return err
+	}
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
+	if err != nil {
+		log.Fatalf("failed to listen port %d: %v", cfg.Port, err)
+	}
+	url := fmt.Sprintf("http://%s", l.Addr().String())
+	log.Printf("start with: %v", url)
+
 	// *http.Server.ListenAndServeメソッドを実行してHTTPリクエストを受け付ける
 	// 引数で渡されたcontext.Contextを通じて処理の中段命令を検知したとき、*http.Server.ShutdownメソッドでHTTPサーバの機能を終了する
 	// run関数の戻り値として*http.Server.ListenAndServeメソッドの戻り値のエラーを返す
