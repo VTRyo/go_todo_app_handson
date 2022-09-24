@@ -7,6 +7,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/VTRyo/go_todo_app_handson/config"
 	"golang.org/x/sync/errgroup"
@@ -33,6 +36,10 @@ func main() {
 }
 
 func run(ctx context.Context) error {
+	// context.Context型の値を経由してシグナルの受信を検知できる
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// configパッケージを使って起動する
 	cfg, err := config.New()
 	if err != nil {
@@ -51,6 +58,8 @@ func run(ctx context.Context) error {
 	s := &http.Server{
 		// 引数で受け取ったnet.listenerを利用するので、Addrフィールドは指定しない
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// コマンドラインで実験する用
+			time.Sleep(5 * time.Second)
 			fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
 		}),
 	}
