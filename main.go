@@ -28,6 +28,18 @@ import (
 //	}
 //}
 
+type Server struct {
+	srv *http.Server
+	l   net.Listener
+}
+
+func NewServer(l net.Listener, mux http.Handler) *Server {
+	return &Server{
+		srv: &http.Server{Handler: mux},
+		l:   l,
+	}
+}
+
 func main() {
 	if err := run(context.Background()); err != nil {
 		log.Printf("failed to terminate server: %v", err)
