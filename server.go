@@ -10,7 +10,7 @@ import (
 	"syscall"
 )
 
-func (s *Server) Run(ctx, context.Context) error {
+func (s *Server) Run(ctx context.Context) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	eg, ctx := errgroup.WithContext(ctx)
