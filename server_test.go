@@ -22,16 +22,19 @@ import (
 // cancel関数を実行する
 // *errgroup.Group.Waitメソッド経由でrun関数の戻り値を検証する
 // GETリクエストで取得したレスポンスボディが期待する文字列であることを検証する
-func TestRun(t *testing.T) {
-	t.Skip()
+func TestServer_Run(t *testing.T) {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("failed to listen port %v", err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	eg, ctx := errgroup.WithContext(ctx)
+	mux := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])
+	})
 	eg.Go(func() error {
-		return run(ctx)
+		s := NewServer(l, mux)
+		return s.Run(ctx)
 	})
 	in := "message"
 	url := fmt.Sprintf("http://%s/%s", l.Addr().String(), in)
